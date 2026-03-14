@@ -1,11 +1,11 @@
 import { StyleSheet, Text, View } from "react-native";
 
-export default function Index() {
+export default function Routines() {
   return (
     <>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>Selecciona una rutina</Text>
+          <Text style={styles.title}>Mis Rutinas</Text>
         </View>
       </View>
       <View
@@ -22,7 +22,7 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     /*  flex: 1,
-    backgroundColor: "#f9fafb", */
+      backgroundColor: "#f9fafb", */
   },
   header: {
     backgroundColor: "#ffffff",
