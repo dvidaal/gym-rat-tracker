@@ -12,6 +12,8 @@ interface CreateRoutineModalProps {
   visible: boolean;
   onClose: () => void;
   routineText: string;
+  routineName: string;
+  setRoutineName: (name: string) => void;
   setRoutineText: (text: string) => void;
   onCreate: () => void;
 }
@@ -22,6 +24,8 @@ const CreateRoutineModal = ({
   routineText,
   setRoutineText,
   onCreate,
+  routineName,
+  setRoutineName,
 }: CreateRoutineModalProps) => {
   return (
     <Modal
@@ -33,6 +37,13 @@ const CreateRoutineModal = ({
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Nueva Rutina</Text>
+          <TextInput
+            style={styles.routineInput}
+            placeholder="Nombre de la rutina"
+            placeholderTextColor="#9ca3af"
+            value={routineName}
+            onChangeText={setRoutineName}
+          />
 
           <TextInput
             style={[styles.routineInput, styles.textArea]}
@@ -61,7 +72,6 @@ const CreateRoutineModal = ({
   );
 };
 
-// Mueve los estilos específicos del modal aquí
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
