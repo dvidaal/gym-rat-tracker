@@ -1,28 +1,21 @@
+import TrackRoutine from "@/components/TrackRoutine";
 import { StyleSheet, Text, View } from "react-native";
 
 export default function Index() {
   return (
-    <>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Selecciona una rutina</Text>
-        </View>
+    <View style={styles.mainContainer}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Selecciona una rutina</Text>
       </View>
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      ></View>
-    </>
+      <TrackRoutine />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    /*  flex: 1,
-    backgroundColor: "#f9fafb", */
+  mainContainer: {
+    flex: 1,
+    backgroundColor: "#f9fafb",
   },
   header: {
     backgroundColor: "#ffffff",

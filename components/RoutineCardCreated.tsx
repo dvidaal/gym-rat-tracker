@@ -1,5 +1,6 @@
+import { useFocusEffect } from "expo-router";
 import { Trash2 } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -8,84 +9,54 @@ import {
   View,
 } from "react-native";
 import RoutineDetailsCard from "../components/RoutineDetailsCard";
-import { Exercise, Routine, supabase } from "../supabase";
+import { useRoutines } from "../hooks/useRoutines";
+import { Routine } from "../supabase";
 
 const RoutineCardCreated = () => {
-  const [loading, setLoading] = useState(false);
-  const [routines, setRoutines] = useState<any[]>([]);
-  const [selectedRoutines, setSelectedRoutines] = useState<Routine | null>(
-    null,
+  const { routines, deleteRoutineFromSupabase, refreshRoutines } =
+    useRoutines();
+  const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshRoutines();
+    }, [refreshRoutines]),
   );
-  const [exercises, setExercises] = useState<Exercise[]>([]);
 
-  useEffect(() => {
-    fetchRoutines();
-  }, []);
+  const viewRoutine = (routine: Routine) => {
+    setSelectedRoutine(routine);
+  };
 
-  const fetchRoutines = async () => {
+  const deleteRoutine = async (routineId: string) => {
     try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("routines")
-        .select("*")
-        .order("created_at", { ascending: false });
-      console.log("RUTINITAS 🐀🐀🐀🐀🐀 ", data);
-      if (error) throw error;
-      setRoutines(data || []);
+      const result = await deleteRoutineFromSupabase(routineId);
+
+      if (!result.success) {
+        throw result.error;
+      }
+
+      if (selectedRoutine && selectedRoutine.id === routineId) {
+        setSelectedRoutine(null);
+      }
     } catch (error) {
-      console.error("Error cargando rutinas:", error);
-    } finally {
-      setLoading(false);
+      console.error(error);
+      alert("No se pudo borrar la rutina");
     }
   };
 
-  const loadExercises = async (routineId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("exercises")
-        .select("*")
-        .eq("routine_id", routineId)
-        .order("order_index", { ascending: true });
-
-      if (error) throw error;
-      setExercises(data || []);
-    } catch (error) {
-      console.error("Error loading exercises:", error);
-    }
-  };
-
-  const viewRoutine = async (routine: Routine) => {
-    setSelectedRoutines(routine);
-    await loadExercises(routine.id);
-  };
-
-  if (selectedRoutines) {
+  if (selectedRoutine) {
     return (
       <RoutineDetailsCard
-        routine={selectedRoutines}
-        onBack={() => setSelectedRoutines(null)}
+        routine={selectedRoutine}
+        onBack={() => setSelectedRoutine(null)}
       />
     );
   }
 
-  const deleteRoutine = async (routine: Routine, id: string) => {
-    try {
-      const { error } = await supabase.from("routines").delete().eq("id", id);
-
-      if (error) throw error;
-      fetchRoutines();
-      if (routine.id === id) {
-        setSelectedRoutines(null);
-      }
-    } catch (error) {
-      console.error("Error deleting routine:", error);
-    }
-  };
-
   return (
     <View style={{ flex: 1 }}>
       <ScrollView style={styles.content}>
-        {routines.map((routine) => (
+        {routines.map((routine: Routine) => (
           <View key={routine.id} style={styles.routineCard}>
             <TouchableOpacity
               style={styles.routineContent}
@@ -98,7 +69,7 @@ const RoutineCardCreated = () => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.deleteButton}
-              onPress={() => deleteRoutine(routine.id, routine.id)}
+              onPress={() => deleteRoutine(routine.id)}
             >
               <Trash2 size={20} color="#ef4444" />
             </TouchableOpacity>
@@ -151,34 +122,6 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     padding: 8,
-  },
-  exerciseItem: {
-    backgroundColor: "#ffffff",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  exerciseNumber: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#10b981",
-    marginRight: 12,
-    minWidth: 30,
-  },
-  exerciseDetails: {
-    flex: 1,
-  },
-  exerciseName: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#111827",
-    marginBottom: 4,
-  },
-  exerciseMeta: {
-    fontSize: 14,
-    color: "#6b7280",
   },
   emptyState: {
     alignItems: "center",
