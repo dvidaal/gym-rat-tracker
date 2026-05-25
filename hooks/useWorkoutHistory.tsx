@@ -3,6 +3,7 @@ import { supabase } from "../supabase";
 
 export const useWorkoutHistory = () => {
   const [lastLogs, setLastLogs] = useState<Record<string, any[]>>({});
+  const [allLogs, setAllLogs] = useState<any[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
 
   const fetchLastLogs = useCallback(async () => {
@@ -10,7 +11,7 @@ export const useWorkoutHistory = () => {
       setLoadingLogs(true);
       const { data, error } = await supabase
         .from("workout_logs")
-        .select("routine_id, session_data, completed_at")
+        .select("id, routine_id, session_data, completed_at, routines(name)")
         .order("completed_at", { ascending: false });
 
       if (error) throw error;
@@ -24,6 +25,7 @@ export const useWorkoutHistory = () => {
       });
 
       setLastLogs(logsByRoutine);
+      setAllLogs(data || []);
     } catch (error) {
       console.log("Error fetching workout logs:", error);
     } finally {
@@ -35,5 +37,5 @@ export const useWorkoutHistory = () => {
     fetchLastLogs();
   }, [fetchLastLogs]);
 
-  return { lastLogs, loadingLogs, refreshLogs: fetchLastLogs };
+  return { lastLogs, allLogs, loadingLogs, refreshLogs: fetchLastLogs };
 };

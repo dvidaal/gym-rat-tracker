@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { BookOpen, Dumbbell } from "lucide-react-native";
+import { BookOpen, Calendar, Dumbbell } from "lucide-react-native";
 
 export default function TabLayout() {
   return (
@@ -28,6 +28,15 @@ export default function TabLayout() {
           title: "Entrenar",
           tabBarIcon: ({ size, color }) => (
             <Dumbbell size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="activity"
+        options={{
+          title: "Actividad",
+          tabBarIcon: ({ size, color }) => (
+            <Calendar size={size} color={color} />
           ),
         }}
       />
