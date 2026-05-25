@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const MONTHS = [
   "Enero",
@@ -152,7 +153,7 @@ export default function ActivityScreen() {
   }, [allLogs, currentMonth, currentYear]);
 
   return (
-    <View style={styles.mainContainer}>
+    <SafeAreaView style={styles.mainContainer} edges={["top"]}>
       <View style={styles.header}>
         <Text style={styles.title}>Actividad 📅</Text>
       </View>
@@ -356,7 +357,7 @@ export default function ActivityScreen() {
           )}
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -367,7 +368,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: "#ffffff",
-    paddingTop: 60,
+    paddingTop: 10,
     paddingBottom: 20,
     paddingHorizontal: 20,
     borderBottomWidth: 1,

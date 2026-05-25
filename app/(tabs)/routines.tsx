@@ -2,8 +2,9 @@ import RoutineCardCreated from "@/components/RoutineCardCreated";
 import { Plus } from "lucide-react-native";
 import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import CreateRoutineModal from "../components/CreateRoutineModal";
-import { supabase } from "../supabase";
+import { SafeAreaView } from "react-native-safe-area-context";
+import CreateRoutineModal from "../../components/CreateRoutineModal";
+import { supabase } from "../../supabase";
 
 export default function Routines() {
   const [createModal, setCreateModal] = useState(false);
@@ -80,8 +81,9 @@ export default function Routines() {
       alert("Error al guardar");
     }
   };
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
         <Text style={styles.title}>Mis Rutinas</Text>
         <TouchableOpacity
@@ -103,7 +105,7 @@ export default function Routines() {
       />
 
       <RoutineCardCreated />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -111,7 +113,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f9fafb" },
   header: {
     backgroundColor: "#ffffff",
-    paddingTop: 60,
+    paddingTop: 10,
     paddingBottom: 20,
     paddingHorizontal: 20,
     borderBottomWidth: 1,

@@ -1,14 +1,15 @@
 import TrackRoutine from "@/components/TrackRoutine";
 import { StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Index() {
   return (
-    <View style={styles.mainContainer}>
+    <SafeAreaView style={styles.mainContainer} edges={["top"]}>
       <View style={styles.header}>
         <Text style={styles.title}>Selecciona una rutina</Text>
       </View>
       <TrackRoutine />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -19,7 +20,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: "#ffffff",
-    paddingTop: 60,
+    paddingTop: 10,
     paddingBottom: 20,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
