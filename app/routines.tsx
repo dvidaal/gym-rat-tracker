@@ -24,22 +24,34 @@ export default function Routines() {
       const days: { dayName: string; exercises: any[] }[] = [];
       let currentDay: { dayName: string; exercises: any[] } | null = null;
 
+      const dayRegex = /^(Día|Day)\s*\d+/i;
+      const exerciseRegex = /^([A-Z]\d+)\.\s*(.*)/i;
+      const seriesRegex = /\s+(\d+\s*[x×X\-–—]\s*\d+(?:\s*(?:–|—|-|\/)\s*\d+)?(?:\s*\/[a-zA-Záéíóúñ]+)?)$/i;
+
       lines.forEach((line) => {
-        if (/^Día\s?\d+/i.test(line)) {
+        if (dayRegex.test(line)) {
           if (currentDay) days.push(currentDay);
           currentDay = { dayName: line, exercises: [] };
-        } else if (
-          line.includes(".") &&
-          (line.includes("-") || line.includes("—"))
-        ) {
-          const normalizedLine = line.replace("—", "-");
-          const [idPart, rest] = normalizedLine.split(".");
-          if (idPart && rest && currentDay) {
-            const [exerciseName, specs] = rest.split("-");
+        } else {
+          const match = line.match(exerciseRegex);
+          if (match && currentDay) {
+            const idPart = match[1].trim();
+            const rest = match[2].trim();
+
+            const seriesMatch = rest.match(seriesRegex);
+            let exerciseName = rest;
+            let series = "";
+
+            if (seriesMatch) {
+              series = seriesMatch[1].trim();
+              exerciseName = rest.substring(0, rest.length - seriesMatch[0].length).trim();
+              exerciseName = exerciseName.replace(/\s*[-—–:\s]+$/, "").trim();
+            }
+
             currentDay.exercises.push({
-              block: idPart.trim(),
-              name: exerciseName?.trim(),
-              series: specs?.trim(),
+              block: idPart,
+              name: exerciseName,
+              series: series,
             });
           }
         }
@@ -47,7 +59,7 @@ export default function Routines() {
 
       if (currentDay) days.push(currentDay);
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("routines")
         .insert([
           {

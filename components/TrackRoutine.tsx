@@ -1,7 +1,12 @@
 import { useRoutines } from "@/hooks/useRoutines";
 import { useWorkoutHistory } from "@/hooks/useWorkoutHistory";
 import { useFocusEffect } from "expo-router";
-import { ArrowLeft, ChevronRight, Plus } from "lucide-react-native";
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronRight,
+  Plus,
+} from "lucide-react-native";
 import { useCallback, useState } from "react";
 import {
   Alert,
@@ -33,8 +38,15 @@ const TrackRoutine = () => {
   const [sessionLogs, setSessionLogs] = useState<
     Record<string, { weight: string; reps: string }>
   >({});
+  const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
 
-  // AUTO-REFRESCO: Se ejecuta cada vez que entras a esta pantalla
+  const toggleDay = (dayName: string) => {
+    setExpandedDays((prev) => ({
+      ...prev,
+      [dayName]: !prev[dayName],
+    }));
+  };
+
   useFocusEffect(
     useCallback(() => {
       refreshRoutines();
@@ -44,6 +56,13 @@ const TrackRoutine = () => {
 
   const viewRoutine = (routine: Routine) => {
     setSelectedRoutine(routine);
+    if (routine.structure.days.length > 0) {
+      setExpandedDays({
+        [routine.structure.days[0].dayName]: true,
+      });
+    } else {
+      setExpandedDays({});
+    }
 
     const routineLogs = lastLogs[routine.id] || [];
     const today = new Date().toISOString().split("T")[0];
@@ -227,113 +246,140 @@ const TrackRoutine = () => {
         <ArrowLeft
           color={"#10b981"}
           size={30}
-          onPress={() => setSelectedRoutine(null)}
+          onPress={() => {
+            setSelectedRoutine(null);
+            setExpandedDays({});
+          }}
         />
         <Text style={styles.routineTitle}>{selectedRoutine.name}</Text>
       </View>
 
       <ScrollView style={styles.trackingContent}>
-        {selectedRoutine.structure.days.map((day, dIdx) => (
-          <View key={dIdx} style={styles.dayContainer}>
-            <Text style={styles.dayName}>{day.dayName}</Text>
+        {selectedRoutine.structure.days.map((day, dIdx) => {
+          const isExpanded = !!expandedDays[day.dayName];
+          return (
+            <View key={dIdx} style={styles.dayContainer}>
+              <TouchableOpacity
+                style={styles.dayHeader}
+                onPress={() => toggleDay(day.dayName)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.dayName}>{day.dayName}</Text>
+                {isExpanded ? (
+                  <ChevronDown color={"#10b981"} size={24} />
+                ) : (
+                  <ChevronRight color={"#6b7280"} size={24} />
+                )}
+              </TouchableOpacity>
 
-            {day.exercises.map((ex, eIdx) => {
-              const logKey = `${day.dayName}-${ex.name}`;
-              const isTracked = sessionLogs[logKey];
-              const routineHistory = lastLogs[selectedRoutine.id] || [];
+              {isExpanded && (
+                <>
+                  {day.exercises.map((ex, eIdx) => {
+                    const logKey = `${day.dayName}-${ex.name}`;
+                    const isTracked = sessionLogs[logKey];
+                    const routineHistory = lastLogs[selectedRoutine.id] || [];
 
-              const exerciseHistory = routineHistory.reduce(
-                (acc: any[], log) => {
-                  const dayData = log.session_data.days?.find(
-                    (d: any) => d.dayName === day.dayName,
-                  );
-                  const exData = dayData?.exercises?.find(
-                    (e: any) => e.name === ex.name,
-                  );
+                    const exerciseHistory = routineHistory.reduce(
+                      (acc: any[], log) => {
+                        const dayData = log.session_data.days?.find(
+                          (d: any) => d.dayName === day.dayName,
+                        );
+                        const exData = dayData?.exercises?.find(
+                          (e: any) => e.name === ex.name,
+                        );
 
-                  if (exData && (exData.weight || exData.reps)) {
-                    acc.push({
-                      date: new Date(log.completed_at).toLocaleDateString(
-                        "es-ES",
-                        { day: "2-digit", month: "2-digit" },
-                      ),
-                      weight: exData.weight,
-                      reps: exData.reps,
-                    });
-                  }
-                  return acc;
-                },
-                [],
-              );
+                        if (exData && (exData.weight || exData.reps)) {
+                          acc.push({
+                            date: new Date(log.completed_at).toLocaleDateString(
+                              "es-ES",
+                              { day: "2-digit", month: "2-digit" },
+                            ),
+                            weight: exData.weight,
+                            reps: exData.reps,
+                          });
+                        }
+                        return acc;
+                      },
+                      [],
+                    );
 
-              return (
-                <View
-                  key={eIdx}
-                  style={[
-                    styles.exerciseTrackerCard,
-                    isTracked && {
-                      borderLeftColor: "#34d399",
-                      backgroundColor: "#f0fdf4",
-                    },
-                  ]}
-                >
-                  <View style={styles.exerciseInfo}>
-                    <Text style={styles.exBlock}>{ex.block}</Text>
-                    <Text style={styles.exName}>{ex.name}</Text>
-                  </View>
-                  <Text style={styles.exSeries}>{ex.series}</Text>
-
-                  {exerciseHistory.length > 0 && (
-                    <View style={styles.historyContainer}>
-                      <Text style={styles.historyTitle}>Evolución:</Text>
-                      <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
+                    return (
+                      <View
+                        key={eIdx}
+                        style={[
+                          styles.exerciseTrackerCard,
+                          isTracked && {
+                            borderLeftColor: "#34d399",
+                            backgroundColor: "#f0fdf4",
+                          },
+                        ]}
                       >
-                        {exerciseHistory.map((h, idx) => (
-                          <View key={idx} style={styles.historyChip}>
-                            <Text style={styles.historyDate}>{h.date}</Text>
-                            <Text style={styles.historyValue}>
-                              {h.weight || 0}kg x {h.reps || 0}
+                        <View style={styles.exerciseInfo}>
+                          <Text style={styles.exBlock}>{ex.block}</Text>
+                          <Text style={styles.exName}>{ex.name}</Text>
+                        </View>
+                        <Text style={styles.exSeries}>{ex.series}</Text>
+
+                        {exerciseHistory.length > 0 && (
+                          <View style={styles.historyContainer}>
+                            <Text style={styles.historyTitle}>Evolución:</Text>
+                            <ScrollView
+                              horizontal
+                              showsHorizontalScrollIndicator={false}
+                            >
+                              {exerciseHistory.map((h, idx) => (
+                                <View key={idx} style={styles.historyChip}>
+                                  <Text style={styles.historyDate}>
+                                    {h.date}
+                                  </Text>
+                                  <Text style={styles.historyValue}>
+                                    {h.weight || 0}kg x {h.reps || 0}
+                                  </Text>
+                                </View>
+                              ))}
+                            </ScrollView>
+                          </View>
+                        )}
+
+                        {isTracked && (
+                          <View style={styles.trackedBadge}>
+                            <Text style={styles.trackedText}>
+                              Hoy: {isTracked.weight}kg x {isTracked.reps} reps
                             </Text>
                           </View>
-                        ))}
-                      </ScrollView>
-                    </View>
-                  )}
+                        )}
 
-                  {isTracked && (
-                    <View style={styles.trackedBadge}>
-                      <Text style={styles.trackedText}>
-                        Hoy: {isTracked.weight}kg x {isTracked.reps} reps
-                      </Text>
-                    </View>
-                  )}
+                        <TouchableOpacity
+                          style={[
+                            styles.logButton,
+                            isTracked && { backgroundColor: "#dcfce7" },
+                          ]}
+                          onPress={() =>
+                            openTracker(ex.name, ex.block, day.dayName)
+                          }
+                        >
+                          <Plus size={20} color={"#10b981"} />
+                          <Text style={styles.logButtonText}>
+                            {isTracked ? "Corregir" : "Track"}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })}
 
                   <TouchableOpacity
-                    style={[
-                      styles.logButton,
-                      isTracked && { backgroundColor: "#dcfce7" },
-                    ]}
-                    onPress={() => openTracker(ex.name, ex.block, day.dayName)}
+                    style={styles.finishDayButton}
+                    onPress={() => finishWorkout(day.dayName)}
                   >
-                    <Plus size={20} color={"#10b981"} />
-                    <Text style={styles.logButtonText}>
-                      {isTracked ? "Corregir" : "Track"}
+                    <Text style={styles.saveButtonText}>
+                      Finalizar {day.dayName}
                     </Text>
                   </TouchableOpacity>
-                </View>
-              );
-            })}
-
-            <TouchableOpacity
-              style={styles.finishDayButton}
-              onPress={() => finishWorkout(day.dayName)}
-            >
-              <Text style={styles.saveButtonText}>Finalizar {day.dayName}</Text>
-            </TouchableOpacity>
-          </View>
-        ))}
+                </>
+              )}
+            </View>
+          );
+        })}
         <View style={{ height: 50 }} />
       </ScrollView>
 
@@ -407,12 +453,22 @@ const styles = StyleSheet.create({
   trackingContent: { paddingHorizontal: 20, paddingTop: 10 },
   routineTitle: { fontSize: 24, fontWeight: "bold" },
   routineGeneralTitle: { fontSize: 24, fontWeight: "bold", marginBottom: 15 },
-  dayContainer: { marginBottom: 30 },
+  dayContainer: { marginBottom: 16 },
+  dayHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    marginBottom: 12,
+  },
   dayName: {
     fontSize: 18,
     fontWeight: "700",
     color: "#374151",
-    marginBottom: 15,
   },
   exerciseTrackerCard: {
     backgroundColor: "#fff",
